@@ -1,0 +1,9 @@
+[package]
+name = "proj"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = "1.49.0"
+flo_draw = "0.3.1"
+flo_canvas = "0.3.1"
