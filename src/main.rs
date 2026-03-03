@@ -24,7 +24,7 @@ static GAME: Game = Game {
     width: 800.0,
     height: 800.0,
 };
-static FPS: f32 = 12.0;
+static FPS: f32 = 1.0;
 
 pub fn main() {
     with_2d_graphics(|| {
@@ -47,7 +47,7 @@ pub fn main() {
 
                 gc.clear_canvas(Color::Rgba(0.1, 0.1, 0.1, 1.0));
                 gc.canvas_height(GAME.height);
-                // gc.center_region(0.0, 0.0, GAME.width, GAME.height);
+                gc.center_region(0.0, 0.0, GAME.width, GAME.height);
 
                 draw_frame(gc, &mut dz);
             });
@@ -65,13 +65,6 @@ fn clear(gc: &mut CanvasGraphicsContext) {
 fn draw_point(gc: &mut CanvasGraphicsContext, point: &Point, size: f32) {
     gc.new_path();
     println!("point: x={}, y={}", point.x, point.y);
-    println!(
-        "x1: {}, x2: {}, y1: {}, y2: {}",
-        point.x - size / 2.0,
-        point.y + size / 2.0,
-        point.x - size / 2.0,
-        point.y + size / 2.0
-    );
     gc.rect(
         point.x - (size / 2.0),
         point.y - (size / 2.0),
@@ -89,15 +82,19 @@ fn draw_frame(gc: &mut CanvasGraphicsContext, dz: &mut f32) {
     *dz += 1.0 * DELTA_TIME;
     println!("dz: {}", *dz);
 
-    const vs: [Point3D; 4] = [
+    const vs: [Point3D; 8] = [
       Point3D {x: 0.5, y: 0.5, z: 1.0},
       Point3D {x: -0.5, y: 0.5, z: 1.0},
-      Point3D {x: 0.0, y: -0.5, z: 1.0},
-      Point3D {x: -0.5, y: -0.5, z: 1.0}
+      Point3D {x: 0.5, y: -0.5, z: 1.0},
+      Point3D {x: -0.5, y: -0.5, z: 1.0},
+      Point3D {x: 0.5, y: 0.5, z: 10.0},
+      Point3D {x: -0.5, y: 0.5, z: 10.0},
+      Point3D {x: 0.5, y: -0.5, z: 10.0},
+      Point3D {x: -0.5, y: -0.5, z: 10.0}
     ];
 
     for point in vs.iter() {
-      draw_point(gc, &screen(&project(point)), 20.0);
+      draw_point(gc, &screen(&project(point)), 10.0);
     }
 
     let sleep_time: Duration = Duration::from_millis((1000.0 / FPS) as u64);
