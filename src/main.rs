@@ -4,6 +4,8 @@ use std::time::Duration;
 use flo_canvas::*;
 use flo_draw::*;
 
+use std::f32::consts::PI;
+
 struct Game {
     width: f32,
     height: f32,
@@ -24,13 +26,14 @@ static GAME: Game = Game {
     width: 800.0,
     height: 800.0,
 };
-static FPS: f32 = 1.0;
+static FPS: f32 = 60.0;
 
 pub fn main() {
     with_2d_graphics(|| {
         let canvas = create_canvas_window("Hello, triangle");
 
         let mut dz: f32 = 0.0;
+        let mut angle: f32 = 0.0;
         loop {
             canvas.draw(|gc| {
                 // clear(gc);
@@ -49,7 +52,7 @@ pub fn main() {
                 gc.canvas_height(GAME.height);
                 gc.center_region(0.0, 0.0, GAME.width, GAME.height);
 
-                draw_frame(gc, &mut dz);
+                draw_frame(gc, &mut dz, &mut angle);
             });
         }
     });
@@ -64,7 +67,7 @@ fn clear(gc: &mut CanvasGraphicsContext) {
 
 fn draw_point(gc: &mut CanvasGraphicsContext, point: &Point, size: f32) {
     gc.new_path();
-    println!("point: x={}, y={}", point.x, point.y);
+    //println!("point: x={}, y={}", point.x, point.y);
     gc.rect(
         point.x - (size / 2.0),
         point.y - (size / 2.0),
@@ -76,25 +79,44 @@ fn draw_point(gc: &mut CanvasGraphicsContext, point: &Point, size: f32) {
     gc.fill();
 }
 
-fn draw_frame(gc: &mut CanvasGraphicsContext, dz: &mut f32) {
+fn translate_dz(point_3d: &Point3D, dz: &f32) -> Point3D {
+    Point3D {
+        x: point_3d.x,
+        y: point_3d.y,
+        z: point_3d.z + dz,
+    }
+}
+
+fn rotate_xz(point_3d: &Point3D, angle: &f32) -> Point3D {
+    let cos = angle.cos();
+    let sin = angle.sin();
+    Point3D {
+        x: point_3d.x*cos - point_3d.z*sin,
+        y: point_3d.y,
+        z: point_3d.x*sin + point_3d.z*cos
+    }
+}
+
+fn draw_frame(gc: &mut CanvasGraphicsContext, dz: &mut f32, angle: &mut f32) {
     const DELTA_TIME: f32 = 1.0 / FPS;
 
     *dz += 1.0 * DELTA_TIME;
-    println!("dz: {}", *dz);
+    *angle += 2.0 * PI * DELTA_TIME;
+    //println!("dz: {}", *dz);
 
-    const vs: [Point3D; 8] = [
-      Point3D {x: 0.5, y: 0.5, z: 1.0},
-      Point3D {x: -0.5, y: 0.5, z: 1.0},
-      Point3D {x: 0.5, y: -0.5, z: 1.0},
-      Point3D {x: -0.5, y: -0.5, z: 1.0},
-      Point3D {x: 0.5, y: 0.5, z: 10.0},
-      Point3D {x: -0.5, y: 0.5, z: 10.0},
-      Point3D {x: 0.5, y: -0.5, z: 10.0},
-      Point3D {x: -0.5, y: -0.5, z: 10.0}
+    const VS: [Point3D; 8] = [
+      Point3D {x: 0.5, y: 0.5, z: 0.25},
+      Point3D {x: -0.5, y: 0.5, z: 0.25},
+      Point3D {x: 0.5, y: -0.5, z: 0.25},
+      Point3D {x: -0.5, y: -0.5, z: 0.25},
+      Point3D {x: 0.5, y: 0.5, z: -0.25},
+      Point3D {x: -0.5, y: 0.5, z: -0.25},
+      Point3D {x: 0.5, y: -0.5, z: -0.25},
+      Point3D {x: -0.5, y: -0.5, z: -0.25}
     ];
 
-    for point in vs.iter() {
-      draw_point(gc, &screen(&project(point)), 10.0);
+    for point in VS.iter() {
+      draw_point(gc, &screen(&project(&translate_dz(&rotate_xz(point, &angle), &dz))), 10.0);
     }
 
     let sleep_time: Duration = Duration::from_millis((1000.0 / FPS) as u64);
@@ -108,9 +130,9 @@ fn screen(point: &Point) -> Point {
     }
 }
 
-fn project(point3D: &Point3D) -> Point {
+fn project(point_3d: &Point3D) -> Point {
     Point {
-        x: point3D.x / point3D.z,
-        y: point3D.y / point3D.z,
+        x: point_3d.x / point_3d.z,
+        y: point_3d.y / point_3d.z,
     }
 }
