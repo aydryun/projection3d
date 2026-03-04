@@ -26,7 +26,8 @@ static GAME: Game = Game {
     width: 800.0,
     height: 800.0,
 };
-static FPS: f32 = 60.0;
+static FPS: f32 = 120000.0;
+static COLOR: flo_canvas::Color = Color::Rgba(1., 0., 0., 1.0);
 
 pub fn main() {
     with_2d_graphics(|| {
@@ -79,6 +80,14 @@ fn draw_point(gc: &mut CanvasGraphicsContext, point: &Point, size: f32) {
     gc.fill();
 }
 
+fn draw_line(gc: &mut CanvasGraphicsContext, point_1: &Point, point_2: &Point, color: flo_canvas::Color) {
+  gc.new_path();
+  gc.move_to(point_1.x, point_1.y);
+  gc.line_to(point_2.x, point_2.y);
+  gc.stroke_color(color);
+  gc.stroke();
+}
+
 fn translate_dz(point_3d: &Point3D, dz: &f32) -> Point3D {
     Point3D {
         x: point_3d.x,
@@ -104,20 +113,60 @@ fn draw_frame(gc: &mut CanvasGraphicsContext, dz: &mut f32, angle: &mut f32) {
     *angle += 2.0 * PI * DELTA_TIME;
     //println!("dz: {}", *dz);
 
+/*     const VS: [Point3D; 8] = [
+      Point3D {x: 0.5, y: 0.5, z: 0.25},
+      Point3D {x: -0.5, y: 0.5, z: 0.25},
+      Point3D {x: -0.5, y: -0.5, z: 0.25},
+      Point3D {x: 0.5, y: -0.5, z: 0.25},
+      Point3D {x: 0.5, y: 0.5, z: -0.25},
+      Point3D {x: -0.5, y: 0.5, z: -0.25},
+      Point3D {x: -0.5, y: -0.5, z: -0.25},
+      Point3D {x: 0.5, y: -0.5, z: -0.25},
+    ];
+
+    const FS: [usize; 8] = [
+      0, 1, 2, 3,
+      4, 5, 6, 7
+    ]; */
+
     const VS: [Point3D; 8] = [
       Point3D {x: 0.5, y: 0.5, z: 0.25},
       Point3D {x: -0.5, y: 0.5, z: 0.25},
+      Point3D {x: -0.5, y: -0.5, z: 0.25}, //---
       Point3D {x: 0.5, y: -0.5, z: 0.25},
-      Point3D {x: -0.5, y: -0.5, z: 0.25},
+
       Point3D {x: 0.5, y: 0.5, z: -0.25},
       Point3D {x: -0.5, y: 0.5, z: -0.25},
+      Point3D {x: -0.5, y: -0.5, z: -0.25}, //---
       Point3D {x: 0.5, y: -0.5, z: -0.25},
-      Point3D {x: -0.5, y: -0.5, z: -0.25}
+    ];
+
+    const FS: [usize; 8] = [
+      0, 1, 2, 3,
+      4, 5, 6, 7,
+    ];
+
+    const CLS: [flo_canvas::Color; 8] = [
+        Color::Rgba(1.0, 0.0, 0.0, 1.0),
+        Color::Rgba(0.0, 1.0, 0.0, 1.0),
+        Color::Rgba(0.0, 0.0, 1.0, 1.0),
+        Color::Rgba(1.0, 1.0, 0.0, 1.0),
+        Color::Rgba(1.0, 0.0, 1.0, 1.0),
+        Color::Rgba(0.0, 1.0, 1.0, 1.0),
+        Color::Rgba(1.0, 1.0, 1.0, 1.0),
+        Color::Rgba(0.5, 0.5, 0.5, 1.0),
     ];
 
     for point in VS.iter() {
-      draw_point(gc, &screen(&project(&translate_dz(&rotate_xz(point, &angle), &dz))), 10.0);
+      draw_point(gc, &screen(&project(&translate_dz(&rotate_xz(point, &angle), &3.0))),  10.0);
     }
+
+    for i in 0..FS.len() - 1 {
+      let a = &screen(&project(&translate_dz(&rotate_xz(&VS[FS[i]], &angle), &3.0)));
+      let b = &screen(&project(&translate_dz(&rotate_xz(&VS[FS[i+1%VS.len()]], &angle), &3.0)));
+      draw_line(gc, a, b, CLS[FS[i]]);
+    }
+
 
     let sleep_time: Duration = Duration::from_millis((1000.0 / FPS) as u64);
     thread::sleep(sleep_time);
@@ -126,7 +175,7 @@ fn draw_frame(gc: &mut CanvasGraphicsContext, dz: &mut f32, angle: &mut f32) {
 fn screen(point: &Point) -> Point {
     Point {
         x: (point.x + 1.0) / 2.0 * GAME.width,
-        y: (1.0 - (point.y + 1.0) / 2.0) * GAME.height,
+        y: (point.y + 1.0) / 2.0 * GAME.height,
     }
 }
 
