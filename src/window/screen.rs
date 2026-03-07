@@ -12,9 +12,9 @@ pub struct Screen {
 }
 
 impl FrameContext {
-  pub fn calculate_deltatime(&mut self, fps: &f32) {
-    self.dt += 1.0 / fps
-  }
+    pub fn calculate_deltatime(&mut self, fps: &f32) {
+        self.dt += 1.0 / fps
+    }
 }
 
 impl Screen {
@@ -48,23 +48,30 @@ impl Screen {
         gc.fill();
     }
 
-    pub fn draw_line(&self, gc: &mut CanvasGraphicsContext, point_1: &Point, point_2: &Point, color: Color) {
+    pub fn draw_line(
+        &self,
+        gc: &mut CanvasGraphicsContext,
+        point_1: &Point,
+        point_2: &Point,
+        color: Color,
+    ) {
+        let screen_point_1 = self.get_screen_coordinates(point_1);
+        let screen_point_2 = self.get_screen_coordinates(point_2);
 
-      let screen_point_1 = self.get_screen_coordinates(point_1);
-      let screen_point_2 = self.get_screen_coordinates(point_2);
-
-      gc.new_path();
-      gc.move_to(screen_point_1.x, screen_point_1.y);
-      gc.line_to(screen_point_2.x, screen_point_2.y);
-      gc.stroke_color(color);
-      gc.stroke();
+        gc.new_path();
+        gc.move_to(screen_point_1.x, screen_point_1.y);
+        gc.line_to(screen_point_2.x, screen_point_2.y);
+        gc.stroke_color(color);
+        gc.stroke();
     }
 
     pub fn get_screen_coordinates(&self, point: &Point) -> Point {
         // println!("gsc : x: {}, y: {}", (point.x * self.width), (point.y * self.height));
         Point {
-            x: (point.x + 1.0) / 2.0 * self.width,
-            y: (point.y + 1.0) / 2.0 * self.height,
+            //x: (point.x + 1.0) / 2.0 * self.width,
+            //y: (point.y + 1.0) / 2.0 * self.height,
+            x: point.x * self.width,
+            y: point.y * self.height,
         }
     }
 }
