@@ -4,6 +4,7 @@ use std::time::Duration;
 use flo_canvas::*;
 use flo_draw::*;
 
+use proj::geometry::axis::Axis;
 use proj::geometry::point::{Point, Point3D};
 use proj::window::screen::{FrameContext, Screen};
 
@@ -21,7 +22,20 @@ pub fn main() {
     with_2d_graphics(|| {
         let canvas = create_canvas_window("proj");
 
-        let mut frame_ctx = FrameContext { dt: 0.0 };
+        let mut frame_ctx = FrameContext { delta_time: 0.0 };
+
+        #[rustfmt::skip]
+        let mut vs: [Point3D; 8] = [
+            Point3D { x: -0.5, y: -0.5, z: 1.5 },
+            Point3D { x:  0.5, y: -0.5, z: 1.5 },
+            Point3D { x:  0.5, y:  0.5, z: 1.5 },
+            Point3D { x: -0.5, y:  0.5, z: 1.5 },
+
+            Point3D { x: -0.5, y: -0.5, z: 2.5 },
+            Point3D { x:  0.5, y: -0.5, z: 2.5 },
+            Point3D { x:  0.5, y:  0.5, z: 2.5 },
+            Point3D { x: -0.5, y:  0.5, z: 2.5 },
+        ];
 
         // let mut dz: f32 = 0.0;
         // let mut angle: f32 = 0.0;
@@ -32,7 +46,7 @@ pub fn main() {
                 //gc.center_region(0.0, 0.0, SCREEN.width, SCREEN.height);
 
                 frame_ctx.calculate_deltatime(&FPS);
-                draw_frame(gc, &frame_ctx);
+                draw_frame(gc, &frame_ctx, &mut vs);
 
                 let sleep_time: Duration = Duration::from_millis((1000.0 / FPS) as u64);
                 thread::sleep(sleep_time);
@@ -41,20 +55,7 @@ pub fn main() {
     });
 }
 
-fn draw_frame(gc: &mut CanvasGraphicsContext, fctx: &FrameContext) {
-    #[rustfmt::skip]
-    let mut vs: [Point3D; 8] = [
-        Point3D { x: -0.5, y: -0.5, z: 1.5 },
-        Point3D { x:  0.5, y: -0.5, z: 1.5 },
-        Point3D { x:  0.5, y:  0.5, z: 1.5 },
-        Point3D { x: -0.5, y:  0.5, z: 1.5 },
-
-        Point3D { x: -0.5, y: -0.5, z: 2.5 },
-        Point3D { x:  0.5, y: -0.5, z: 2.5 },
-        Point3D { x:  0.5, y:  0.5, z: 2.5 },
-        Point3D { x: -0.5, y:  0.5, z: 2.5 },
-    ];
-
+fn draw_frame(gc: &mut CanvasGraphicsContext, fctx: &FrameContext, vs: &mut [Point3D; 8]) {
     #[rustfmt::skip]
     const FS: [usize; 36] = [
         // face avant
@@ -83,11 +84,13 @@ fn draw_frame(gc: &mut CanvasGraphicsContext, fctx: &FrameContext) {
     ];
 
     for point3d in vs.iter_mut() {
-        point3d.rotate_xz(&(2.0 * PI * fctx.dt));
+        point3d.translate(-2.0, Axis::Z);
+        point3d.rotate_xz(&(0.02 * PI * fctx.delta_time));
+        point3d.translate(2.0, Axis::Z);
     }
 
     for point3d in vs.iter() {
-        // println!("Debug: {}", &point3d.project());
+        println!("Debug: {}", &point3d);
         SCREEN.draw_point(gc, &point3d.project(), 10.0, COLOR);
     }
 

@@ -3,7 +3,7 @@ use flo_canvas::{CanvasGraphicsContext, Color, GraphicsContext, GraphicsPrimitiv
 use crate::geometry::point::Point;
 
 pub struct FrameContext {
-    pub dt: f32,
+    pub delta_time: f32,
 }
 
 pub struct Screen {
@@ -13,7 +13,13 @@ pub struct Screen {
 
 impl FrameContext {
     pub fn calculate_deltatime(&mut self, fps: &f32) {
-        self.dt += 1.0 / fps
+        self.delta_time = 1.0 / fps
+    }
+
+    pub fn new(fps: &f32) -> FrameContext {
+        FrameContext {
+            delta_time: 1.0 / fps,
+        }
     }
 }
 
@@ -26,6 +32,16 @@ impl Screen {
             y: point.y / &self.height,
         }
     } */
+
+    /*
+    pub fn new(width: f32, height: f32) -> Screen {
+        Screen {
+            width: width,
+            height: height,
+            aspect_ratio: width / height,
+        }
+    }
+    */
 
     pub fn draw_point(
         &self,
