@@ -5,8 +5,9 @@ use flo_canvas::*;
 use flo_draw::*;
 
 use proj::geometry::axis::Axis;
-use proj::geometry::point::{Point, Point3D};
 use proj::window::screen::{FrameContext, Screen};
+
+use proj::obj::loader::Obj;
 
 use std::f32::consts::PI;
 
@@ -24,21 +25,14 @@ pub fn main() {
 
         let mut frame_ctx = FrameContext { delta_time: 0.0 };
 
-        #[rustfmt::skip]
-        let mut vs: [Point3D; 8] = [
-            Point3D { x: -0.5, y: -0.5, z: 1.5 },
-            Point3D { x:  0.5, y: -0.5, z: 1.5 },
-            Point3D { x:  0.5, y:  0.5, z: 1.5 },
-            Point3D { x: -0.5, y:  0.5, z: 1.5 },
+        let mut model = Obj::new("./assets/complex_model.obj");
+        model.load_obj_file().unwrap();
 
-            Point3D { x: -0.5, y: -0.5, z: 2.5 },
-            Point3D { x:  0.5, y: -0.5, z: 2.5 },
-            Point3D { x:  0.5, y:  0.5, z: 2.5 },
-            Point3D { x: -0.5, y:  0.5, z: 2.5 },
-        ];
+        //offset model 10z
+        for point in model.vertices.iter_mut() {
+            point.translate(10.0, Axis::Z);
+        }
 
-        // let mut dz: f32 = 0.0;
-        // let mut angle: f32 = 0.0;
         loop {
             canvas.draw(|gc| {
                 gc.clear_canvas(Color::Rgba(0.1, 0.1, 0.1, 1.0));
@@ -46,7 +40,7 @@ pub fn main() {
                 //gc.center_region(0.0, 0.0, SCREEN.width, SCREEN.height);
 
                 frame_ctx.calculate_deltatime(&FPS);
-                draw_frame(gc, &frame_ctx, &mut vs);
+                draw_frame(gc, &frame_ctx, &mut model);
 
                 let sleep_time: Duration = Duration::from_millis((1000.0 / FPS) as u64);
                 thread::sleep(sleep_time);
@@ -55,48 +49,35 @@ pub fn main() {
     });
 }
 
-fn draw_frame(gc: &mut CanvasGraphicsContext, fctx: &FrameContext, vs: &mut [Point3D; 8]) {
-    #[rustfmt::skip]
-    const FS: [usize; 36] = [
-        // face avant
-        0,1,2,
-        0,2,3,
+fn draw_frame(gc: &mut CanvasGraphicsContext, fctx: &FrameContext, model: &mut Obj) {
+    // Calcule le centre du modèle
+    let mut center_x = 0.0;
+    let mut center_z = 0.0;
+    for point3d in model.vertices.iter() {
+        center_x += point3d.x;
+        center_z += point3d.z;
+    }
+    center_x /= model.vertices.len() as f32;
+    center_z /= model.vertices.len() as f32;
 
-        // face arrière
-        4,6,5,
-        4,7,6,
-
-        // gauche
-        0,3,7,
-        0,7,4,
-
-        // droite
-        1,5,6,
-        1,6,2,
-
-        // haut
-        3,2,6,
-        3,6,7,
-
-        // bas
-        0,4,5,
-        0,5,1,
-    ];
-
-    for point3d in vs.iter_mut() {
-        point3d.translate(-2.0, Axis::Z);
-        point3d.rotate_xz(&(0.02 * PI * fctx.delta_time));
-        point3d.translate(2.0, Axis::Z);
+    // Tourne tous les points autour du centre du modèle
+    for point3d in model.vertices.iter_mut() {
+        point3d.translate(-center_x, Axis::X);
+        point3d.translate(-center_z, Axis::Z);
+        point3d.rotate_xz(&(0.1 * PI * fctx.delta_time));
+        point3d.translate(center_x, Axis::X);
+        point3d.translate(center_z, Axis::Z);
     }
 
-    for point3d in vs.iter() {
-        println!("Debug: {}", &point3d);
-        SCREEN.draw_point(gc, &point3d.project(), 10.0, COLOR);
-    }
+    // for point3d in model.vertices.iter() {
+    //     SCREEN.draw_point(gc, &point3d.project(), 10.0, COLOR);
+    // }
 
-    for i in 0..FS.len() {
-        let a = &vs[FS[i]].project();
-        let b = &vs[FS[(i + 1) % FS.len()]].project();
+    for i in 0..model.faces.len() {
+        // -1 car les obj sont indexed a prtit de 1
+        // i pour faire comme i + 1 en cas normal
+        let a = &model.vertices[model.faces[i] - 1].project();
+        let b = &model.vertices[model.faces[(i + 1) % model.faces.len()] - 1].project();
 
         SCREEN.draw_line(gc, &a, &b, COLOR);
     }

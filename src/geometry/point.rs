@@ -7,6 +7,7 @@ pub struct Point {
     pub y: f32,
 }
 
+#[derive(Debug, Clone)]
 pub struct Point3D {
     pub x: f32,
     pub y: f32,
@@ -14,6 +15,18 @@ pub struct Point3D {
 }
 
 impl Point3D {
+    pub fn from_vec(coords_xyz: &Vec<f32>) -> Self {
+        if coords_xyz.len() > 3 {
+            panic!("Error: vac param lenght shouldn't be longer than 3 (xyz)")
+        }
+
+        Point3D {
+            x: coords_xyz[0],
+            y: coords_xyz[1],
+            z: coords_xyz[2],
+        }
+    }
+
     // Translation sur axe
     pub fn translate(&mut self, amount: f32, axis: Axis) {
         match axis {
@@ -40,8 +53,8 @@ impl Point3D {
     }
 
     pub fn rotate_xz(&mut self, angle: &f32) {
-        let cos = angle.cos();
         let sin = angle.sin();
+        let cos = angle.cos();
         let old_x = self.x;
         let old_z = self.z;
 
@@ -51,8 +64,8 @@ impl Point3D {
 
     pub fn project(&self) -> Point {
         Point {
-            y: self.y / self.z,
             x: self.x / self.z,
+            y: self.y / self.z,
         }
     }
 }

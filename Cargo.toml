@@ -7,8 +7,3 @@ edition = "2024"
 tokio = "1.49.0"
 flo_draw = "0.3.1"
 flo_canvas = "0.3.1"
-
-
-[[bin]]
-name = "obj"
-path = "src/bin/obj.rs"
