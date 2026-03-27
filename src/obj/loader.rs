@@ -1,6 +1,4 @@
-use std::error::Error;
 use std::fmt::Display;
-use std::fs;
 use std::fs::File;
 use std::io::{self, BufReader, prelude::*};
 
@@ -8,7 +6,7 @@ use crate::geometry::point::Point3D;
 
 pub struct Obj<'a> {
     pub vertices: Vec<Point3D>,
-    pub faces: Vec<usize>,
+    pub faces: Vec<Vec<usize>>,
     pub path: &'a str,
 }
 
@@ -17,7 +15,7 @@ impl Obj<'_> {
         Obj {
             vertices: Vec::new(),
             faces: Vec::new(),
-            path: path,
+            path, //path: path
         }
     }
 
@@ -42,6 +40,7 @@ impl Obj<'_> {
         //
 
         let mut point_creation_vs: Vec<f32> = Vec::new();
+        let mut point_creation_fs: Vec<usize> = Vec::new();
 
         for val in values.iter() {
             match line.chars().next() {
@@ -51,16 +50,20 @@ impl Obj<'_> {
                 }
                 Some('f') => {
                     let parsed_val: usize = val.parse().unwrap();
-                    self.faces.push(parsed_val)
+                    point_creation_fs.push(parsed_val);
                 }
                 _ => (),
             }
         }
 
         // Ajout du point 3d dans la liste des vertices que si c'est v
-        if point_creation_vs.len() > 0 {
+        if !point_creation_vs.is_empty() {
             let point = Point3D::from_vec(&point_creation_vs);
             self.vertices.push(point);
+        }
+
+        if !point_creation_fs.is_empty() {
+            self.faces.push(point_creation_fs);
         }
     }
 }

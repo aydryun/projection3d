@@ -25,7 +25,7 @@ pub fn main() {
 
         let mut frame_ctx = FrameContext { delta_time: 0.0 };
 
-        let mut model = Obj::new("./assets/complex_model.obj");
+        let mut model = Obj::new("./assets/scene.obj");
         model.load_obj_file().unwrap();
 
         //offset model 10z
@@ -73,12 +73,11 @@ fn draw_frame(gc: &mut CanvasGraphicsContext, fctx: &FrameContext, model: &mut O
     //     SCREEN.draw_point(gc, &point3d.project(), 10.0, COLOR);
     // }
 
-    for i in 0..model.faces.len() {
-        // -1 car les obj sont indexed a prtit de 1
-        // i pour faire comme i + 1 en cas normal
-        let a = &model.vertices[model.faces[i] - 1].project();
-        let b = &model.vertices[model.faces[(i + 1) % model.faces.len()] - 1].project();
-
-        SCREEN.draw_line(gc, &a, &b, COLOR);
+    for face in &model.faces {
+        for i in 0..face.len() {
+            let a = &model.vertices[face[i] - 1].project();
+            let b = &model.vertices[face[(i + 1) % face.len()] - 1].project();
+            SCREEN.draw_line(gc, &a, &b, COLOR);
+        }
     }
 }

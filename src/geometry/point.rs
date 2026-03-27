@@ -15,7 +15,7 @@ pub struct Point3D {
 }
 
 impl Point3D {
-    pub fn from_vec(coords_xyz: &Vec<f32>) -> Self {
+    pub fn from_vec(coords_xyz: &[f32]) -> Self {
         if coords_xyz.len() > 3 {
             panic!("Error: vac param lenght shouldn't be longer than 3 (xyz)")
         }
