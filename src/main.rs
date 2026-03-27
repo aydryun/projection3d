@@ -25,7 +25,7 @@ pub fn main() {
 
         let mut frame_ctx = FrameContext { delta_time: 0.0 };
 
-        let mut model = Obj::new("./assets/scene.obj");
+        let mut model = Obj::new("./assets/skateboard.obj");
         model.load_obj_file().unwrap();
 
         //offset model 10z
